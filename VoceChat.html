@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="icon" href="favicon.svg" type="image/svg+xml">
+    <title>PureMilk的VoceChat服务</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        :root {
+            --背景色: #ffffff;
+            --文字色: #333;
+            --强调色: #ff770f;
+            --卡片阴影: 0 2px 12px rgba(0,0,0,0.08);
+            --强调色-浅: rgba(67, 97, 238, 0.1);
+        }
+
+        [data-theme="dark"] {
+            --背景色: #000e18;
+            --文字色: #e5ddd7;
+            --强调色: #2ed573;
+            --卡片阴影: 0 2px 12px rgba(0,0,0,0.3);
+            --强调色-浅: rgba(76, 201, 240, 0.1);
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: var(--背景色);
+            color: var(--文字色);
+            transition: background 0.3s, color 0.3s;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+
+        /* 主内容动画 */
+        .main-content {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.8s cubic-bezier(0.33, 1, 0.68, 1);
+            display: block !important;
+            visibility: visible !important;
+            position: relative;
+            z-index: 1;
+        }
+
+        body.ready .main-content {
+            opacity: 1 !important;
+            transform: translateY(0) !important;
+        }
+
+        /* 主题切换按钮 */
+        .主题切换 {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 10px;
+            border: none;
+            background: var(--强调色);
+            color: white !important;
+            border-radius: 5px;
+            cursor: pointer;
+            z-index: 1000;
+            transition: 
+                background 0.3s ease-out,
+                transform 0.2s ease-out;
+        }
+        
+        .主题切换:hover {
+            transform: scale(1.05);
+        }
+        
+        .主题切换:active {
+            transform: scale(0.95);
+        }
+
+        /* 内容卡片 */
+        .卡片 {
+            background: rgba(255,255,255,0.1);
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+            box-shadow: var(--卡片阴影);
+            transition: background 0.3s;
+        }
+
+        img.头像 {
+            width: 120px;
+            height: 120px;
+            display: block;
+            margin: 0 auto;
+            object-fit: cover;
+            border: none !important;
+            border-radius: 0;
+        }
+
+        /* 头部样式 */
+        .simple-header {
+            position: relative;
+            height: 300px;
+            overflow: hidden;
+            margin-bottom: 20px;
+            z-index: 1;
+        }
+
+        .simple-header img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            filter: brightness(0.9);
+        }
+
+        /* 特色图标 */
+        .特色项 {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            background: var(--强调色-浅);
+        }
+
+        .特色项:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+
+        .特色图标 {
+            font-size: 24px;
+            margin-right: 15px;
+            color: var(--强调色);
+        }
+
+        .特色内容 {
+            flex: 1;
+        }
+
+        .特色标题 {
+            margin: 0 0 5px 0;
+            font-weight: bold;
+        }
+
+        /* 访问按钮 */
+        .访问按钮 {
+            display: inline-block;
+            padding: 12px 24px;
+            background: var(--强调色);
+            color: white;
+            text-decoration: none;
+            border-radius: 30px;
+            font-weight: bold;
+            margin: 20px 0;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            /* 新增以下属性确保在小屏幕上良好显示 */
+            min-width: 200px;
+            text-align: center;
+            box-sizing: border-box;
+        }
+
+        @media (max-width: 480px) {
+            .访问按钮 {
+                width: 100%;
+                padding: 15px 24px; /* 在小屏幕上增加垂直内边距 */
+                border-radius: 8px; /* 在小屏幕上改为更小的圆角 */
+            }
+        }
+
+
+        .访问按钮:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+        }
+
+        .访问按钮:active {
+            transform: translateY(1px);
+        }
+
+        /* 注意事项 */
+        .注意事项 {
+            padding: 15px;
+            border-left: 4px solid var(--强调色);
+            background: rgba(255,255,255,0.05);
+            margin: 20px 0;
+            border-radius: 0 8px 8px 0;
+        }
+
+        /* 返回按钮 */
+        .返回按钮 {
+            display: inline-block;
+            padding: 10px 20px;
+            background: transparent;
+            color: var(--强调色);
+            text-decoration: none;
+            border-radius: 5px;
+            border: 1px solid var(--强调色);
+            margin: 20px 0;
+            transition: all 0.3s ease;
+        }
+
+        .返回按钮:hover {
+            background: var(--强调色);
+            color: white;
+        }
+
+        @media (max-width: 768px) {
+            .simple-header {
+                height: 200px;
+            }
+            
+            .特色项 {
+                flex-direction: column;
+            }
+            
+            .特色图标 {
+                margin-right: 0;
+                margin-bottom: 10px;
+            }
+            
+            .访问按钮 {
+                width: 100%;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="main-content">
+        <button class="主题切换" onclick="切换主题()">🌓 切换模式</button>
+        
+       
+      
+        <div class="卡片" style="text-align: center;">
+            <img src="logo.png" alt="我的头像" class="头像">
+            <h1>VoceChat 私密聊天服务</h1>
+            <p>🔒 您的对话，只有您和对方知道</p>
+        </div>
+        
+        <div class="卡片">
+            <h2>🌌 数字星空下的私密对话</h2>
+            <p>在这个数据泛滥的时代，真正的隐私已成为奢侈品。VoceChat 是您数字生活中的一片净土，在这里，每一句对话都如同夜空中闪烁的星光，只为您和对话的另一方可见。</p>
+            
+            <p>我为您搭建的这个私密聊天平台，就像是数字世界中的一个隐蔽花园，只有持有正确钥匙的人才能进入。在这里，您可以放心地交流想法、分享秘密，不必担心第三方的窥探。</p>
+        </div>
+        
+        <div class="卡片">
+            <h2>✨ 服务特色</h2>
+            
+            <div class="特色项">
+                <div class="特色图标">🔐</div>
+                <div class="特色内容">
+                    <h3 class="特色标题">端到端加密</h3>
+                    <p>采用先进的加密技术，确保从发送到接收的整个过程中，消息都处于加密状态。即使是服务器管理员也无法解密您的聊天内容。</p>
+                </div>
+            </div>
+            
+            <div class="特色项">
+                <div class="特色图标">🚪</div>
+                <div class="特色内容">
+                    <h3 class="特色标题">私密空间</h3>
+                    <p>完全独立部署在我的NAS服务器上，不依赖任何第三方云服务。您的数据始终掌握在您信任的环境中。</p>
+                </div>
+            </div>
+            
+            <div class="特色项">
+                <div class="特色图标">⚡</div>
+                <div class="特色内容">
+                    <h3 class="特色标题">极速体验</h3>
+                    <p>得益于本地化部署，消息传递几乎无延迟，让您的对话如面对面般流畅自然。</p>
+                </div>
+            </div>
+            
+            <div class="特色项">
+                <div class="特色图标">🎨</div>
+                <div class="特色内容">
+                    <h3 class="特色标题">个性化界面</h3>
+                    <p>支持深色/浅色模式切换，可根据您的喜好调整界面风格，保护眼睛的同时也彰显个性。</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="卡片">
+            <h2>🚀 如何开始</h2>
+            <p>加入这个私密聊天网络非常简单：</p>
+            <ol style="padding-left: 20px;">
+                <li>确保您连接的是校园网或寝室WiFi网络</li>
+                <li>点击下方按钮访问VoceChat服务</li>
+                <li>注册一个新账号或使用已有账号登录</li>
+                <li>开始您的加密对话之旅</li>
+            </ol>
+            
+            <div style="text-align: center; margin-top: 30px;">
+                <a href="http://10.61.145.176:3009/" class="访问按钮">立即体验 VoceChat</a>
+            </div>
+        </div>
+        
+        <div class="卡片">
+            <h2>⚠️ 注意事项</h2>
+            <div class="注意事项">
+                <p>1. 此服务仅限校园网或寝室WiFi网络访问，校外网络无法连接</p>
+                <p>2. 请妥善保管您的账号密码，这是您对话安全的最后一道防线</p>
+                <p>3. 虽然服务本身高度安全，但仍建议不要在聊天中分享极其敏感的信息</p>
+                <p>4. 服务可能因维护或网络问题暂时不可用，请谅解</p>
+            </div>
+            
+            <p style="margin-top: 20px;">这个VoceChat服务是我个人搭建的实验室项目，旨在为同学们提供一个安全、私密的交流空间。希望它能成为您数字生活中一个可靠的小角落。</p>
+        </div>
+        
+        <div style="text-align: center;">
+            <a href="index.html" class="返回按钮">← 返回个人主页</a>
+        </div>
+    </div>
+
+    <script>
+        // 主题切换
+        function 切换主题() {
+            const theme = document.body.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+            document.body.setAttribute('data-theme', theme);
+            localStorage.setItem('theme', theme);
+        }
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            // 初始化主题
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.body.setAttribute('data-theme', savedTheme);
+            
+            // 显示主内容
+            document.body.classList.add('ready');
+        });
+    </script>
+</body>
+</html>
