@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="icon" href="favicon.svg" type="image/svg+xml">
+    <title>PureMilk的个人主页</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        :root {
+            --背景色: #ffffff;
+            --文字色: #333;
+            --强调色: #ff770f;
+            --卡片阴影: 0 2px 12px rgba(0,0,0,0.08);
+            --强调色-浅: rgba(67, 97, 238, 0.1);
+        }
+
+        [data-theme="dark"] {
+            --背景色: #000e18;
+            --文字色: #e5ddd7;
+            --强调色: #2ed573;
+            --卡片阴影: 0 2px 12px rgba(0,0,0,0.3);
+            --强调色-浅: rgba(76, 201, 240, 0.1);
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: var(--背景色);
+            color: var(--文字色);
+            transition: background 0.3s, color 0.3s;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+
+        /* 主内容动画 */
+        .main-content {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.8s cubic-bezier(0.33, 1, 0.68, 1);
+            display: block !important;
+            visibility: visible !important;
+            position: relative;
+            z-index: 1;
+        }
+
+        body.ready .main-content {
+            opacity: 1 !important;
+            transform: translateY(0) !important;
+        }
+
+        /* 主题切换按钮 */
+        .主题切换 {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 10px;
+            border: none;
+            background: var(--强调色);
+            color: white !important;
+            border-radius: 5px;
+            cursor: pointer;
+            z-index: 1000;
+            transition: 
+                background 0.3s ease-out,
+                transform 0.2s ease-out;
+        }
+        
+        .主题切换:hover {
+            transform: scale(1.05);
+        }
+        
+        .主题切换:active {
+            transform: scale(0.95);
+        }
+
+        /* 内容卡片 */
+        .卡片 {
+            background: rgba(255,255,255,0.1);
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+            box-shadow: var(--卡片阴影);
+            transition: background 0.3s;
+        }
+
+        img.头像 {
+            width: 120px;
+            height: 120px;
+            display: block;
+            margin: 0 auto;
+            object-fit: cover;
+            border: none !important;
+            border-radius: 0;
+        }
+
+        /* 头部样式 */
+        .simple-header {
+            position: relative;
+            height: 300px;
+            overflow: hidden;
+            margin-bottom: 20px;
+            z-index: 1;
+        }
+
+        .simple-header img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            filter: brightness(0.9);
+        }
+
+        /* 更新列表样式 */
+        .更新列表 {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            position: relative;
+        }
+
+        .更新列表 > li {
+            position: relative;
+            padding: 15px 0 15px 30px;
+            border-left: 2px solid var(--强调色);
+            margin-left: 12px;
+        }
+
+        .更新列表 > li:last-child {
+            border-left-color: transparent;
+        }
+
+        .更新时间 {
+            display: inline-block;
+            min-width: 100px;
+            font-weight: 600;
+            color: var(--强调色);
+            position: absolute;
+            left: -35px;
+            background: var(--背景色);
+            padding: 2px 10px;
+            border-radius: 15px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .更新内容 {
+            margin-left: 90px;
+            padding: 10px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 8px;
+            transition: transform 0.3s ease;
+        }
+
+        .更新内容:hover {
+            transform: translateX(10px);
+        }
+
+        .子列表 {
+            list-style: none;
+            padding-left: 20px;
+            margin-top: 8px;
+        }
+
+        .子列表 li {
+            position: relative;
+            padding-left: 15px;
+            margin: 5px 0;
+        }
+
+        .子列表 li::before {
+            content: "▹";
+            position: absolute;
+            left: 0;
+            color: var(--强调色);
+        }
+
+        /* 音频播放器样式 */
+        .音频播放器 {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 10px;
+            margin: 15px auto 0;
+            display: block;
+        }
+
+        .音频播放器::-webkit-media-controls-panel {
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 5px;
+        }
+
+        .音频播放器::-webkit-media-controls-play-button,
+        .音频播放器::-webkit-media-controls-mute-button {
+            background-color: var(--强调色);
+            border-radius: 50%;
+            color: white;
+        }
+
+        [data-theme="dark"] .音频播放器 {
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        [data-theme="dark"] .音频播放器::-webkit-media-controls-panel {
+            background: rgba(30, 30, 30, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .音频播放器,
+        .音频播放器::-webkit-media-controls-panel {
+            transition: all 0.3s ease;
+        }
+
+        @media (max-width: 768px) {
+            .simple-header {
+                height: 200px;
+            }
+            
+            .更新列表 > li {
+                padding-left: 20px;
+                margin-left: 0;
+            }
+            
+            .更新时间 {
+                position: static;
+                display: block;
+                margin-bottom: 10px;
+                left: auto;
+                background: transparent;
+                box-shadow: none;
+            }
+            
+            .更新内容 {
+                margin-left: 0;
+            }
+        }
+        /* 霓虹按钮样式 */
+        .霓虹容器 {
+            position: relative;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 20px 0;
+        }
+
+        .霓虹按钮 {
+            position: relative;
+            padding: 15px 30px;
+            color: var(--文字色);
+            text-decoration: none;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-size: 1.2em;
+            overflow: hidden;
+            transition: 0.5s;
+            -webkit-box-reflect: below 1px linear-gradient(transparent, #0003);
+            background: rgba(255,255,255,0.1);
+            border-radius: 5px;
+            z-index: 1;
+            font-weight: bold;
+        }
+
+        .霓虹按钮:hover {
+            background: var(--强调色);
+            color: #fff;
+            box-shadow: 0 0 10px var(--强调色),
+                        0 0 40px var(--强调色),
+                        0 0 80px var(--强调色);
+            transition-delay: 0.2s;
+        }
+
+        .霓虹按钮 span {
+            position: absolute;
+            display: block;
+        }
+
+        .霓虹按钮 span:nth-child(1) {
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--强调色));
+            animation: animate1 2s linear infinite;
+            animation-delay: 0s;
+        }
+
+        .霓虹按钮 span:nth-child(2) {
+            top: -100%;
+            right: 0;
+            width: 2px;
+            height: 100%;
+            background: linear-gradient(180deg, transparent, var(--强调色));
+            animation: animate2 2s linear infinite;
+            animation-delay: 0.5s;
+        }
+
+        .霓虹按钮 span:nth-child(3) {
+            bottom: 0;
+            right: -100%;
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(270deg, transparent, var(--强调色));
+            animation: animate3 2s linear infinite;
+            animation-delay: 1s;
+        }
+
+        .霓虹按钮 span:nth-child(4) {
+            bottom: -100%;
+            left: 0;
+            width: 2px;
+            height: 100%;
+            background: linear-gradient(360deg, transparent, var(--强调色));
+            animation: animate4 2s linear infinite;
+            animation-delay: 1.5s;
+        }
+
+        @keyframes animate1 {
+            0% { left: -100%; }
+            50%,100% { left: 100%; }
+        }
+
+        @keyframes animate2 {
+            0% { top: -100%; }
+            50%,100% { top: 100%; }
+        }
+
+        @keyframes animate3 {
+            0% { right: -100%; }
+            50%,100% { right: 100%; }
+        }
+
+        @keyframes animate4 {
+            0% { bottom: -100%; }
+            50%,100% { bottom: 100%; }
+        }
+
+        /* 移动端适配 */
+        @media (max-width: 768px) {
+            .霓虹按钮 {
+                padding: 12px 24px;
+                font-size: 1em;
+            }
+            
+            .霓虹按钮:hover {
+                box-shadow: 0 0 5px var(--强调色),
+                            0 0 20px var(--强调色),
+                            0 0 40px var(--强调色);
+            }
+        }
+        /* 添加主题适配 */
+        [data-theme="light"] .霓虹按钮 {
+            background: rgba(0,0,0,0.05); /* 浅色主题下调整背景透明度 */
+        }
+        [data-theme="light"] .霓虹按钮:hover {
+            background: var(--强调色);
+            color: #fff;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="main-content">
+        <button class="主题切换" onclick="切换主题()">🌓 切换模式</button>
+        
+        <div class="simple-header">
+            <img src="header-image.png" alt="网站标题图" loading="lazy">
+            <div class="header-text"></div>
+        </div>
+      
+        <div class="卡片" style="text-align: center;">
+            <img src="my-photo.png" alt="我的头像" class="头像">
+            <h1>PureMIlk的个人主页</h1>
+            <p>📧 邮箱：puremilkchun@edu.zjnu.cn</p>
+        </div>
+        <!-- 添加到主页面的卡片区域，可以放在"关于PureMilk"卡片之后 -->
+        <div class="卡片">
+            <h2>💬 私密聊天实验室</h2>
+            <div class="霓虹容器">
+                <a href="VoceChat.html" class="霓虹按钮">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                    VoceChat 私密聊天
+                </a>
+            </div>
+            <p style="margin-top: 20px;">体验端到端加密的私密聊天服务，仅限校园网访问</p>
+        </div>
+
+        
+        <div class="卡片" style="text-align: center;">
+            <a href="stats3.html" style="text-decoration: none; color: var(--强调色); font-weight: bold;">📊 查看访问统计</a>
+        </div>
+        
+        <div class="卡片">
+            <h2>🎹 音频实验室</h2>
+            <audio controls class="音频播放器">
+                <source src="audio1.mp3" type="audio/mpeg">
+                <source src="audio1.wav" type="audio/wav">
+                <source src="audio1.ogg" type="audio/ogg">
+                <source src="All Falls Down.flac" type="audio/flac">
+                您的浏览器不支持音频播放
+            </audio>
+        </div>
+
+        <div class="卡片">
+            <h2>🥛 关于PureMilk</h2>
+            <p>我是一杯持续迭代的「数字牛奶」，致力于将代码转化为滋养创新的养分。目前专注于：</p>
+            <ul style="list-style: none; padding-left: 20px;">
+                <li>🔭 探索领域：全栈开发 × 交互设计 × 数据可视化</li>
+                <li>🌱 技术牧场：React生态 | Python酿造 | 云原生发酵</li>
+                <li>💡 创新配方：用20%技术 + 80%创意调制数字鸡尾酒</li>
+            </ul>
+            <p>🧑💻 近期动态：</p>
+            <blockquote style="border-left: 3px solid var(--强调色); padding-left: 15px; margin-left: 0;">
+                正在研发「Milk-UI」开源组件库，用设计系统的思维重构前端开发体验
+            </blockquote>
+            <div style="display: flex; gap: 15px; margin-top: 20px;">
+                <a href="https://github.com/PureMilkchun" style="text-decoration: none; color: var(--强调色);">🐮 GitHub牧场</a>
+                <a href="https://space.bilibili.com/651511520?spm_id_from=333.1007.0.0" style="text-decoration: none; color: var(--强调色);">🍼 bilibili牧场</a>
+                <a href="https://www.xiaohongshu.com/user/profile/648417e3000000001f007adb" style="text-decoration: none; color: var(--强调色);">🍟 小红书牧场</a>
+            </div>
+        </div>
+
+        <div class="卡片">
+            <h2>📝 更新记录</h2>
+            <ul class="更新列表">
+                <li>
+                    <span class="更新时间">2025.03.27</span>
+                    <div class="更新内容">
+                        <p>🎉 全新推出暗黑模式</p>
+                        <ul class="子列表">
+                            <li>新增主题切换按钮</li>
+                            <li>支持浏览器本地存储</li>
+                            <li>优化过渡动画效果</li>
+                        </ul>
+                    </div>
+                </li>
+                <li>
+                    <span class="更新时间">2025.03.27</span>
+                    <div class="更新内容">
+                        <p>🚀 性能优化升级</p>
+                        <ul class="子列表">
+                            <li>压缩背景视频体积</li>
+                            <li>启用CSS硬件加速</li>
+                            <li>优化移动端加载速度</li>
+                        </ul>
+                    </div>
+                </li>
+                <li>
+                    <span class="更新时间">2025.03.27</span>
+                    <div class="更新内容">
+                        <p>✨ 初版上线</p>
+                        <ul class="子列表">
+                            <li>完成基础架构搭建</li>
+                            <li>实现欢迎页动画效果</li>
+                            <li>部署基础个人信息模块</li>
+                        </ul>
+                    </div>
+                </li>
+                <li>
+                    <span class="更新时间">2025.03.28</span>
+                    <div class="更新内容">
+                        <p>🎶 有很多</p>
+                        <ul class="子列表">
+                            <li>加入了4个随机视频</li>
+                            <li>修复了欢迎语颜色的问题</li>
+                            <li>解决了群友认为我被盗号的问题</li>
+                            <li>增加了网页访问量的功能（模拟数据）</li>
+                        </ul>
+                    </div>
+                </li>
+                <li>
+                    <span class="更新时间">2025.03.29 1:32</span>
+                    <div class="更新内容">
+                        <p>😍 超多更新</p>
+                        <ul class="子列表">
+                            <li>加入了2个随机视频</li>
+                            <li>新增静音切换按钮</li>
+                            <li>新增颜色与阴影的细微调整</li>
+                            <li>新增音频实验室版块</li>
+                        </ul>
+                    </div>
+                </li>
+                <li>
+                    <span class="更新时间">2025.03.29 2:32</span>
+                    <div class="更新内容">
+                        <p>⚡ 紧急修复</p>
+                        <ul class="子列表">
+                            <li>修复了移动设备中无法显示"解除静音"的按钮</li>
+                            <li>修复了进入主页后视频未静音的问题</li>
+                            <li>调整了音频实验室的图标</li>
+                            <li>修复音频组件暗夜模式显示异常</li>
+                        </ul>
+                    </div>
+                </li>
+                <li>
+                    <span class="更新时间">2025.03.29 16:57</span>
+                    <div class="更新内容">
+                        <p>⚡ 紧急修复</p>
+                        <ul class="子列表">
+                            <li>重构了访问量显示界面</li>
+                            <li>调整了强调色</li>
+                            <li>修复切换按钮暗夜模式显示异常</li>
+                        </ul>
+                    </div>
+                </li>
+                <li>
+                    <span class="更新时间">2025.03.29 19:02</span>
+                    <div class="更新内容">
+                        <p>🥳 细节改善</p>
+                        <ul class="子列表">
+                            <li>增加了favicon</li>
+                        </ul>
+                    </div>
+                </li>
+                <li>
+                    <span class="更新时间">2025.03.29 19:58</span>
+                    <div class="更新内容">
+                        <p>🥳 细节改善</p>
+                        <ul class="子列表">
+                            <li>分离了欢迎页面,解决了重复加载欢迎动画和视频的问题</li>
+                            <li>访问次数页面增加了返回首页的按钮</li>
+                        </ul>
+                    </div>
+                </li>
+                <li>
+                    <span class="更新时间">2025.03.30 1:40</span>
+                    <div class="更新内容">
+                        <p>💥 重磅更新</p>
+                        <ul class="子列表">
+                            <li>新增VoceChat功能，提供校园内的聊天服务</li>
+                        </ul>
+                    </div>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // 主题切换
+        function 切换主题() {
+            const theme = document.body.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+            document.body.setAttribute('data-theme', theme);
+            localStorage.setItem('theme', theme);
+        }
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            // 检查是否应该显示欢迎页
+            if (!localStorage.getItem('welcomeShown')) {
+                window.location.href = "welcome.html";
+                return;
+            }
+
+            // 初始化主题
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.body.setAttribute('data-theme', savedTheme);
+            
+            // 显示主内容
+            document.body.classList.add('ready');
+        });
+    </script>
+</body>
+</html>
