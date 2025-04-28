@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>访问统计 - PureMilk</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        /* 继承主站样式 */
+        :root {
+            --背景色: #f0f0f0;
+            --文字色: #333;
+            --强调色: #ff770f;
+            --卡片阴影: 0 2px 12px rgba(0,0,0,0.08);
+            --强调色-rgb: 255, 71, 87;
+        }
+
+        [data-theme="dark"] {
+            --背景色: #1a1a1a;
+            --文字色: #fff;
+            --强调色: #2ed573;
+            --卡片阴影: 0 2px 12px rgba(0,0,0,0.3);
+            --强调色-rgb: 46, 213, 115;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: var(--背景色);
+            color: var(--文字色);
+            transition: background 0.3s, color 0.3s;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .main-content {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.8s cubic-bezier(0.33, 1, 0.68, 1);
+        }
+
+        body.ready .main-content {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+            .主题切换 {
+            position: fixed;
+            top: 25px;
+            right: 25px;
+            padding: 12px 20px;
+            border: 2px solid var(--强调色);
+            background: rgba(var(--强调色-rgb), 0.1);
+            color: var(--强调色) !important;
+            border-radius: 30px;
+            cursor: pointer;
+            z-index: 1000;
+            transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            backdrop-filter: blur(6px);
+            box-shadow: 
+                0 4px 15px rgba(var(--强调色-rgb), 0.15),
+                0 0 0 1px rgba(255,255,255,0.1) inset;
+            transform: translateZ(0);
+        }
+        .主题切换:hover {
+            background: rgba(var(--强调色-rgb), 0.2);
+            transform: translateY(-2px) scale(1.05);
+            box-shadow: 
+                0 6px 25px rgba(var(--强调色-rgb), 0.25),
+                0 0 0 1px rgba(255,255,255,0.2) inset;
+        }
+        .主题切换:active {
+            transform: scale(0.95);
+            transition-duration: 0.1s;
+        }
+        .主题切换::before {
+            content: "🌓";
+            display: inline-block;
+            margin-right: 8px;
+            font-size: 1.1em;
+            transition: transform 0.3s ease;
+        }
+        .主题切换:hover::before {
+            transform: rotate(15deg);
+        }
+        [data-theme="dark"] .主题切换 {
+            border-color: rgba(255,255,255,0.3);
+            background: rgba(255,255,255,0.05);
+            box-shadow: 
+                0 4px 15px rgba(0,0,0,0.3),
+                0 0 0 1px rgba(255,255,255,0.05) inset;
+        }
+        [data-theme="dark"] .主题切换:hover {
+            background: rgba(255,255,255,0.1);
+            box-shadow: 
+                0 6px 25px rgba(0,0,0,0.4),
+                0 0 0 1px rgba(255,255,255,0.1) inset;
+        }
+
+
+        .卡片 {
+            background: rgba(255,255,255,0.1);
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 10px;
+            box-shadow: var(--卡片阴影);
+            transition: all 0.3s;
+        }
+
+        /* 统计图容器 */
+        .chart-container {
+            position: relative;
+            width: 100%;
+            height: 400px;
+            margin: 20px 0;
+            overflow: visible;
+        }
+
+        /* 折线动画 */
+        .chart-line {
+            fill: none;
+            stroke: var(--强调色);
+            stroke-width: 3;
+            stroke-linecap: round;
+            stroke-dasharray: 1000;
+            stroke-dashoffset: 1000;
+            animation: draw 1.5s ease-out forwards;
+        }
+
+        .data-point {
+            opacity: 0;
+            animation: fadeInUp 0.5s ease-out forwards;
+        }
+
+        /* 坐标轴样式 */
+        .axis text {
+            fill: var(--文字色);
+            font-size: 12px;
+            opacity: 0.8;
+        }
+
+        .axis line {
+            stroke: var(--文字色);
+            opacity: 0.2;
+        }
+
+        .axis path {
+            display: none;
+        }
+
+        /* 悬浮提示 */
+        .tooltip {
+            position: absolute;
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s;
+            font-size: 14px;
+            transform: translate(-50%, -100%);
+        }
+
+        @keyframes draw {
+            to { stroke-dashoffset: 0; }
+        }
+
+        @keyframes fadeInUp {
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 768px) {
+            .chart-container {
+                height: 300px;
+            }
+        }
+        /* 返回按钮样式 */
+        .返回按钮 {
+            position: fixed;
+            bottom: 25px;
+            left: 25px;
+            padding: 12px 20px;
+            border: 2px solid var(--强调色);
+            background: rgba(var(--强调色-rgb), 0.1);
+            color: var(--强调色) !important;
+            border-radius: 30px;
+            cursor: pointer;
+            z-index: 1000;
+            transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            backdrop-filter: blur(6px);
+            box-shadow: 
+                0 4px 15px rgba(var(--强调色-rgb), 0.15),
+                0 0 0 1px rgba(255,255,255,0.1) inset;
+            transform: translateZ(0);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+        }
+
+        .返回按钮:hover {
+            background: rgba(var(--强调色-rgb), 0.2);
+            transform: translateY(-2px) scale(1.05);
+            box-shadow: 
+                0 6px 25px rgba(var(--强调色-rgb), 0.25),
+                0 0 0 1px rgba(255,255,255,0.2) inset;
+        }
+
+        .返回按钮:active {
+            transform: scale(0.95);
+            transition-duration: 0.1s;
+        }
+
+        .返回按钮::before {
+            content: "←";
+            display: inline-block;
+            margin-right: 8px;
+            font-size: 1.1em;
+            transition: transform 0.3s ease;
+        }
+
+        .返回按钮:hover::before {
+            transform: translateX(-3px);
+        }
+
+        [data-theme="dark"] .返回按钮 {
+            border-color: rgba(255,255,255,0.3);
+            background: rgba(255,255,255,0.05);
+            box-shadow: 
+                0 4px 15px rgba(0,0,0,0.3),
+                0 0 0 1px rgba(255,255,255,0.05) inset;
+        }
+
+        [data-theme="dark"] .返回按钮:hover {
+            background: rgba(255,255,255,0.1);
+            box-shadow: 
+                0 6px 25px rgba(0,0,0,0.4),
+                0 0 0 1px rgba(255,255,255,0.1) inset;
+        }
+
+        /* 响应式调整 */
+        @media (max-width: 768px) {
+            .返回按钮 {
+                bottom: 15px;
+                left: 15px;
+                padding: 10px 15px;
+                font-size: 14px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .返回按钮 {
+                bottom: 10px;
+                left: 10px;
+                padding: 8px 12px;
+                font-size: 13px;
+            }
+            
+            .返回按钮::before {
+                margin-right: 5px;
+            }
+        }
+
+
+    </style>
+</head>
+<!-- 使用官方CDN -->
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<body>
+    <a href="index.html" class="返回按钮">返回首页</a>
+    <div class="welcome-overlay" id="welcomeOverlay">
+        <!-- 保留与主站一致的欢迎界面 -->
+    </div>
+
+    <div class="main-content">
+        <button class="主题切换" onclick="切换主题()">🌓 切换模式</button>
+        
+        <div class="卡片">
+            <h1>📈 访问统计</h1>
+            <p>最近7天访问量趋势</p>
+            <div class="chart-container" id="chart"></div>
+            <div class="tooltip" id="tooltip"></div>
+        </div>
+    </div>
+
+    <script>
+        // 模拟数据生成
+        function generateData() {
+            const data = [];
+            const date = new Date();
+            for(let i = 6; i >= 0; i--) {
+                const d = new Date(date);
+                d.setDate(date.getDate() - i);
+                data.push({
+                    date: d.toISOString().split('T')[0],
+                    value: Math.floor(Math.random() * 300 + 200) // 200-500之间的随机数
+                });
+            }
+            return data;
+        }
+
+        // 绘制统计图
+        function drawChart() {
+            const data = generateData();
+            const container = document.getElementById('chart');
+            const tooltip = document.getElementById('tooltip');
+            
+            // 清空容器
+            container.innerHTML = '<svg width="100%" height="100%"></svg>';
+            const svg = d3.select('#chart svg');
+            
+            // 设置尺寸
+            const width = container.clientWidth;
+            const height = container.clientHeight;
+            const margin = {top: 20, right: 30, bottom: 30, left: 40};
+            
+            // 创建比例尺
+            const x = d3.scaleBand()
+                .domain(data.map(d => d.date))
+                .range([margin.left, width - margin.right])
+                .padding(0.1);
+
+            const y = d3.scaleLinear()
+                .domain([0, d3.max(data, d => d.value)])
+                .nice()
+                .range([height - margin.bottom, margin.top]);
+
+            // 创建坐标轴
+            const xAxis = g => g
+                .attr("transform", `translate(0,${height - margin.bottom})`)
+                .call(d3.axisBottom(x).tickSizeOuter(0));
+
+            const yAxis = g => g
+                .attr("transform", `translate(${margin.left},0)`)
+                .call(d3.axisLeft(y));
+
+            // 绘制折线
+            const line = d3.line()
+                .x(d => x(d.date) + x.bandwidth() / 2)
+                .y(d => y(d.value))
+                .curve(d3.curveMonotoneX);
+
+            svg.append("g")
+                .call(xAxis)
+                .selectAll("text")
+                .style("fill", "var(--文字色)");
+
+            svg.append("g")
+                .call(yAxis)
+                .selectAll("text")
+                .style("fill", "var(--文字色)");
+
+            svg.append("path")
+                .datum(data)
+                .attr("class", "chart-line")
+                .attr("d", line);
+
+            // 添加数据点
+            svg.selectAll("circle")
+                .data(data)
+                .enter()
+                .append("circle")
+                .attr("class", "data-point")
+                .attr("cx", d => x(d.date) + x.bandwidth() / 2)
+                .attr("cy", d => y(d.value))
+                .attr("r", 5)
+                .attr("fill", "var(--强调色)")
+                .style("stroke", "var(--背景色)")
+                .style("stroke-width", 2)
+                .on("mouseover", (event, d) => {
+                    tooltip.style.opacity = 1;
+                    tooltip.innerHTML = `${d.date}<br>访问量: ${d.value}`;
+                    tooltip.style.left = `${event.pageX}px`;
+                    tooltip.style.top = `${event.pageY}px`;
+                })
+                .on("mousemove", (event) => {
+                    tooltip.style.left = `${event.pageX}px`;
+                    tooltip.style.top = `${event.pageY}px`;
+                })
+                .on("mouseout", () => {
+                    tooltip.style.opacity = 0;
+                });
+        }
+
+        // 主题切换
+        function 切换主题() {
+            const theme = document.body.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+            document.body.setAttribute('data-theme', theme);
+            localStorage.setItem('theme', theme);
+            drawChart(); // 重新绘制图表以应用新主题
+        }
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', () => {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.body.setAttribute('data-theme', savedTheme);
+            drawChart();
+            setTimeout(() => document.body.classList.add('ready'), 100);
+        });
+
+        // 窗口调整时重新绘制
+        window.addEventListener('resize', drawChart);
+    </script>
+</body>
+</html>
