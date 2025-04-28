@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="icon" href="favicon.svg" type="image/svg+xml">
+    <title>欢迎来到PureMilk的宇宙</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        :root {
+            --背景色: #ffffff;
+            --文字色: #333;
+            --强调色: #ff770f;
+        }
+
+        [data-theme="dark"] {
+            --背景色: #000e18;
+            --文字色: #e5ddd7;
+            --强调色: #2ed573;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Arial', sans-serif;
+            background: var(--背景色);
+            color: var(--文字色);
+            overflow: hidden;
+        }
+
+        /* 欢迎界面动画 */
+        .welcome-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0,0,0,0.9);
+            z-index: 9999;
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            padding-bottom: env(safe-area-inset-bottom);
+            color: white !important;
+        }
+
+        .video-container {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .welcome-video {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            min-width: 100%;
+            min-height: 100%;
+            object-fit: cover;
+            opacity: 0.9;
+            transition: opacity 0.5s;
+        }
+
+        /* 打字动画 */
+        .typewriter {
+            display: inline-block;
+            overflow: hidden;
+            text-align: center;
+            line-height: 1.5;
+        }
+
+        .typewriter h1 {
+            display: inline-block;
+            font-size: clamp(2rem, 5vw, 2.5rem);
+            border-right: .15em solid var(--强调色);
+            white-space: pre-wrap;
+            overflow: hidden;
+            margin: 0 auto;
+            letter-spacing: .1em;
+            animation: 
+                typing 3s steps(40, end) forwards,
+                blink-caret .75s step-end infinite;
+            color: white !important;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
+        }
+
+        @keyframes typing {
+            from { width: 0; height: 0; }
+            to { width: 100%; height: auto; }
+        }
+
+        @keyframes blink-caret {
+            from, to { border-color: transparent }
+            50% { border-color: var(--强调色) }
+        }
+
+        /* 进入按钮 */
+        .enter-button {
+            padding: 15px 40px;
+            font-size: 1.3rem;
+            background: var(--强调色);
+            border: none;
+            color: white;
+            border-radius: 35px;
+            cursor: pointer;
+            opacity: 0;
+            transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+            animation: 
+                buttonEntrance 1s cubic-bezier(0.34, 1.56, 0.64, 1) 3.5s forwards,
+                buttonGlow 1.5s ease-in-out infinite 4.5s;
+        }
+
+        @keyframes buttonEntrance {
+            from { opacity: 0; transform: translateY(80px) scale(0.8); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        @keyframes buttonGlow {
+            0%, 100% { box-shadow: 0 0 15px rgba(255,255,255,0.3); }
+            50% { box-shadow: 0 0 30px rgba(255,255,255,0.6); }
+        }
+
+        .welcome-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4vh;
+            width: 100%;
+            max-width: 800px;
+            padding: 20px;
+            padding-bottom: 15vh;
+            text-align: center;
+            box-sizing: border-box;
+        }
+
+        .mute-toggle {
+            position: relative;
+            margin-top: 20px;
+            padding: 8px 15px;
+            background: rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.4);
+            border-radius: 20px;
+            color: white;
+            cursor: pointer;
+            backdrop-filter: blur(5px);
+            transition: all 0.3s ease;
+            opacity: 0;
+            animation: buttonEntrance 1s cubic-bezier(0.34, 1.56, 0.64, 1) 0.5s forwards;
+        }
+        
+        .mute-toggle:hover {
+            background: rgba(255,255,255,0.3);
+        }
+        
+        .mute-toggle.muted {
+            background: rgba(255,255,255,0.1);
+        }
+        
+        .mute-toggle.muted::before {
+            content: "🔇";
+        }
+
+        @media (max-width: 768px) {
+            .typewriter h1 {
+                font-size: 1.8rem;
+                white-space: normal;
+                border-right: none;
+            }
+            .enter-button {
+                font-size: 1.1rem;
+                padding: 12px 30px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="welcome-overlay">
+        <div class="video-container" id="videoContainer"></div>
+        <div class="welcome-content">
+            <div class="typewriter">
+                <h1>欢迎来到<br>PureMilk的<br>个人宇宙</h1>
+            </div>
+            <button class="enter-button" onclick="enterMainSite()">
+                进入探索 →
+            </button>
+            <button class="mute-toggle" onclick="toggleMute()">
+                🔊 解除静音
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const videoManager = {
+            videos: [
+                '鹿乃子乃子虎视眈眈.mp4',
+                '【哈赫】一生伴我，永不分离（剪辑相当高能.mp4',
+                '雷总doodle摇 .mp4',
+                '你被骗了 原版高清无水印.mp4',
+                'The Way I Still Love You.mp4',
+                'All falls down.mp4'
+            ],
+            
+            init() {
+                this.loadRandomVideo();
+                setTimeout(() => {
+                    const muteBtn = document.querySelector('.mute-toggle');
+                    if (muteBtn) {
+                        muteBtn.textContent = "🔊 解除静音";
+                        muteBtn.classList.remove('muted');
+                    }
+                }, 500);
+            },
+            
+            loadRandomVideo() {
+                const container = document.getElementById('videoContainer');
+                const randomIndex = Math.floor(Math.random() * this.videos.length);
+                const video = document.createElement('video');
+                
+                video.className = 'welcome-video';
+                video.autoplay = true;
+                video.muted = true;
+                video.loop = true;
+                video.playsInline = true;
+                
+                const source = document.createElement('source');
+                source.src = this.videos[randomIndex];
+                source.type = 'video/mp4';
+                
+                video.appendChild(source);
+                container.innerHTML = '';
+                container.appendChild(video);
+                
+                window.welcomeVideo = video;
+            }
+        };
+
+        function toggleMute() {
+            const video = document.querySelector('.welcome-video');
+            const muteBtn = document.querySelector('.mute-toggle');
+            
+            if (video.muted) {
+                video.muted = false;
+                muteBtn.textContent = "🔇 静音";
+                muteBtn.classList.add('muted');
+                video.play().catch(e => console.log('自动播放失败:', e));
+            } else {
+                video.muted = true;
+                muteBtn.textContent = "🔊 解除静音";
+                muteBtn.classList.remove('muted');
+            }
+        }
+
+        function enterMainSite() {
+            localStorage.setItem('welcomeShown', 'true');
+            window.location.href = "index.html";
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            videoManager.init();
+        });
+    </script>
+</body>
+</html>
